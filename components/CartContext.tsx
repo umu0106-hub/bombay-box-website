@@ -1,94 +1,111 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react'
+import { MenuItem } from '@/lib/menu'
 
 export interface CartItem {
-  id: string
+  cartId: string
+  itemId: string
   name: string
   price: number
-  quantity?: number
-}
-
-export interface CustomerInfo {
-  firstName: string
-  lastName: string
-  email: string
-  phone: string
+  quantity: number
+  customizations: Array<{ id: string; name: string }>
 }
 
 interface CartContextType {
   items: CartItem[]
-  total: number
-  tax: number
-  grandTotal: number
-  customerInfo: CustomerInfo
-  setCustomerInfo: (info: CustomerInfo) => void
+  isOpen: boolean
+  openCart: () => void
+  closeCart: () => void
   addItem: (item: CartItem) => void
-  removeItem: (itemId: string) => void
+  removeItem: (cartId: string) => void
+  updateQuantity: (cartId: string, newQuantity: number) => void
   clearCart: () => void
+  itemCount: number
+  subtotal: number
+  tax: number
+  total: number
+  bumpKey: number
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
-export function CartProvider({ children }: { children: ReactNode }) {
+export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
-  const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-  })
+  const [isOpen, setIsOpen] = useState(false)
+  const [bumpKey, setBumpKey] = useState(0)
 
-  // Load from sessionStorage on mount
+  /* Restore cart from session storage on mount */
   useEffect(() => {
     try {
-      const savedItems = sessionStorage.getItem('cartItems')
-      if (savedItems) {
-        setItems(JSON.parse(savedItems))
+      const saved = sessionStorage.getItem('bombay-box-cart')
+      if (saved) {
+        setItems(JSON.parse(saved))
       }
-    } catch (error) {
-      console.error('Failed to load cart from sessionStorage:', error)
+    } catch (err) {
+      console.error('[CartProvider] Failed to restore cart:', err)
     }
   }, [])
 
-  // Save to sessionStorage on change
+  /* Save cart to session storage whenever it changes */
   useEffect(() => {
     try {
-      sessionStorage.setItem('cartItems', JSON.stringify(items))
-    } catch (error) {
-      console.error('Failed to save cart to sessionStorage:', error)
+      sessionStorage.setItem('bombay-box-cart', JSON.stringify(items))
+    } catch (err) {
+      console.error('[CartProvider] Failed to save cart:', err)
     }
   }, [items])
 
-  const total = items.reduce((sum, item) => sum + item.price, 0)
-  const tax = parseFloat((total * 0.06625).toFixed(2))
-  const grandTotal = total + tax
+  const addItem = useCallback((item: CartItem) => {
+    setItems((prev) => {
+      const existing = prev.find((it) => it.cartId === item.cartId)
+      if (existing) {
+        return prev.map((it) => (it.cartId === item.cartId ? { ...it, quantity: it.quantity + 1 } : it))
+      }
+      return [...prev, item]
+    })
+    setBumpKey((k) => k + 1)
+  }, [])
 
-  const addItem = (item: CartItem) => {
-    setItems([...items, { ...item, id: `${item.id}-${Date.now()}` }])
-  }
+  const removeItem = useCallback((cartId: string) => {
+    setItems((prev) => prev.filter((item) => item.cartId !== cartId))
+  }, [])
 
-  const removeItem = (itemId: string) => {
-    setItems(items.filter((item) => item.id !== itemId))
-  }
+  const updateQuantity = useCallback((cartId: string, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      removeItem(cartId)
+    } else {
+      setItems((prev) => prev.map((item) => (item.cartId === cartId ? { ...item, quantity: newQuantity } : item)))
+    }
+  }, [removeItem])
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setItems([])
-    sessionStorage.removeItem('cartItems')
-  }
+    sessionStorage.removeItem('bombay-box-cart')
+  }, [])
+
+  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const TAX_RATE = 0.06625 // NJ
+  const tax = Math.round(subtotal * TAX_RATE * 100) / 100
+  const total = Math.round((subtotal + tax) * 100) / 100
 
   return (
     <CartContext.Provider
       value={{
         items,
-        total,
-        tax,
-        grandTotal,
-        customerInfo,
-        setCustomerInfo,
+        isOpen,
+        openCart: () => setIsOpen(true),
+        closeCart: () => setIsOpen(false),
         addItem,
         removeItem,
+        updateQuantity,
         clearCart,
+        itemCount,
+        subtotal,
+        tax,
+        total,
+        bumpKey,
       }}
     >
       {children}
@@ -97,9 +114,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 }
 
 export function useCart() {
-  const context = useContext(CartContext)
-  if (!context) {
-    throw new Error('useCart must be used within CartProvider')
-  }
-  return context
+  const ctx = useContext(CartContext)
+  if (!ctx) throw new Error('useCart must be used within CartProvider')
+  return ctx
 }

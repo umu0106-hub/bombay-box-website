@@ -1,129 +1,156 @@
+'use client'
+
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import BombayBoxLogo from './BombayBoxLogo'
 import { useCart } from './CartContext'
-import { BombayBoxLogo } from './BombayBoxLogo'
 
 export default function Header() {
-  const router = useRouter()
-  const { items } = useCart()
+  const { itemCount, openCart, bumpKey } = useCart()
+  const [scrolled, setScrolled] = useState(false)
+  const [shake, setShake] = useState(0)
 
-  const handleLogoClick = () => {
-    router.push('/')
-  }
+  /* Compact header after scroll */
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  /* Trigger shake animation when item added */
+  useEffect(() => {
+    if (bumpKey > 0) setShake((s) => s + 1)
+  }, [bumpKey])
 
   return (
-    <header style={{
-      backgroundColor: '#1a1a1a',
-      borderBottom: '1px solid #404040',
-      padding: '16px 20px',
-      position: 'sticky',
-      top: 0,
-      zIndex: 100,
-    }}>
-      <div style={{
-        maxWidth: '1200px',
-        margin: '0 auto',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-      }}>
+    <header
+      style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        backdropFilter: 'blur(12px)',
+        backgroundColor: scrolled ? 'rgba(28, 20, 16, 0.95)' : 'transparent',
+        borderBottom: scrolled ? '1px solid rgba(255, 107, 26, 0.2)' : 'none',
+        transition: 'all 300ms var(--ease-smooth)',
+        padding: scrolled ? '0.75rem 1rem' : '1rem',
+      }}
+    >
+      <nav
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          maxWidth: '1200px',
+          margin: '0 auto',
+          gap: '1rem',
+        }}
+      >
         {/* Logo */}
-        <button
-          onClick={handleLogoClick}
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: 0,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
-        >
-          <BombayBoxLogo size={32} />
-          <span style={{
-            fontSize: '24px',
-            fontWeight: 'bold',
-            color: '#f4a460',
-          }}>
-            Bombay Box
-          </span>
-        </button>
+        <Link href="/" style={{ textDecoration: 'none' }}>
+          <BombayBoxLogo compact={scrolled} />
+        </Link>
 
         {/* Nav Links */}
-        <nav style={{
-          display: 'flex',
-          gap: '32px',
-          alignItems: 'center',
-        }}>
-          <Link href="/menu" style={{
-            color: '#f0f0f0',
-            textDecoration: 'none',
-            fontSize: '16px',
-            transition: 'color 200ms ease-in-out',
+        <div
+          style={{
+            display: 'flex',
+            gap: '2rem',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flex: 1,
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = '#f4a460')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = '#f0f0f0')}
+        >
+          <Link
+            href="/menu"
+            style={{
+              color: 'var(--cream)',
+              textDecoration: 'none',
+              fontSize: '0.95rem',
+              fontWeight: '500',
+              transition: 'color 200ms',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--saffron)')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--cream)')}
           >
             Menu
           </Link>
-          <a href="#" style={{
-            color: '#f0f0f0',
-            textDecoration: 'none',
-            fontSize: '16px',
-            transition: 'color 200ms ease-in-out',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = '#f4a460')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = '#f0f0f0')}
-          >
-            About
-          </a>
-          <a href="#" style={{
-            color: '#f0f0f0',
-            textDecoration: 'none',
-            fontSize: '16px',
-            transition: 'color 200ms ease-in-out',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = '#f4a460')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = '#f0f0f0')}
-          >
-            Contact
-          </a>
-          {items.length > 0 && (
-            <Link href="/checkout" style={{
-              position: 'relative',
-              color: '#f0f0f0',
+          <a
+            href="tel:201-546-1558"
+            style={{
+              color: 'var(--amber)',
               textDecoration: 'none',
-              fontSize: '16px',
-              transition: 'color 200ms ease-in-out',
+              fontSize: '0.95rem',
+              fontWeight: '600',
+              transition: 'color 200ms',
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = '#f4a460')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = '#f0f0f0')}
+            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--saffron)')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--amber)')}
+          >
+            📞 201-546-1558
+          </a>
+        </div>
+
+        {/* Cart Button */}
+        <button
+          onClick={openCart}
+          style={{
+            position: 'relative',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '44px',
+            height: '44px',
+            borderRadius: '50%',
+            border: '2px solid var(--saffron)',
+            backgroundColor: 'transparent',
+            color: 'var(--saffron)',
+            fontSize: '1.25rem',
+            cursor: 'pointer',
+            transition: 'all 200ms var(--ease-smooth)',
+            animation: shake > 0 ? `headerCartShake 400ms ease-out` : 'none',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'var(--saffron)'
+            e.currentTarget.style.color = 'var(--charcoal)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent'
+            e.currentTarget.style.color = 'var(--saffron)'
+          }}
+        >
+          🛒
+          {itemCount > 0 && (
+            <span
+              style={{
+                position: 'absolute',
+                top: '-6px',
+                right: '-6px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minWidth: '24px',
+                height: '24px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--rose)',
+                color: 'var(--cream)',
+                fontSize: '0.7rem',
+                fontWeight: '700',
+              }}
             >
-              🛒 Checkout
-              {items.length > 0 && (
-                <span style={{
-                  position: 'absolute',
-                  top: '-8px',
-                  right: '-8px',
-                  backgroundColor: '#ff8c42',
-                  color: '#fff',
-                  width: '20px',
-                  height: '20px',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '12px',
-                  fontWeight: 'bold',
-                }}>
-                  {items.length}
-                </span>
-              )}
-            </Link>
+              {itemCount}
+            </span>
           )}
-        </nav>
-      </div>
+        </button>
+      </nav>
+
+      <style>{`
+        @keyframes headerCartShake {
+          0%, 100% { transform: scale(1) rotate(0deg); }
+          25% { transform: scale(1.1) rotate(-5deg); }
+          75% { transform: scale(1.1) rotate(5deg); }
+        }
+      `}</style>
     </header>
   )
 }

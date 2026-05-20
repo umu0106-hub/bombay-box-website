@@ -1,41 +1,44 @@
-/**
- * POST /api/create-payment-intent
- *
- * Creates a Stripe PaymentIntent for the given amount + currency.
- * Called from checkout page (client-side) before rendering PaymentElement.
- *
- * Request body: { amount: number (cents), metadata?: {...} }
- * Response: { client_secret: string } or { error: string }
- */
-
-import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
+import { getSupabaseAdminClient } from '@/lib/supabase'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
   try {
-    const { amount, metadata } = await req.json()
+    const body = (await req.json()) as {
+      amount: number
+      customerInfo: {
+        name: string
+        phone: string
+        email: string
+      }
+    }
 
-    if (!amount || amount < 50) {
+    if (!body.amount || !body.customerInfo?.name) {
       return NextResponse.json(
-        { error: 'Invalid amount' },
-        { status: 400 }
+        { error: 'Missing required fields' },
+        { status: 400 },
       )
     }
 
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount,
+    const stripeIntent = await stripe.paymentIntents.create({
+      amount: Math.round(body.amount * 100), // Stripe expects cents
       currency: 'usd',
-      metadata: metadata || {},
+      payment_method_types: ['card'],
+      metadata: {
+        customer_name: body.customerInfo.name,
+        customer_phone: body.customerInfo.phone,
+        customer_email: body.customerInfo.email,
+      },
     })
 
     return NextResponse.json({
-      client_secret: paymentIntent.client_secret,
+      clientSecret: stripeIntent.client_secret,
     })
-  } catch (error: any) {
-    console.error('Error creating payment intent:', error)
+  } catch (err) {
+    console.error('[POST /api/create-payment-intent]', err)
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
+      { error: 'Payment setup failed' },
+      { status: 500 },
     )
   }
 }

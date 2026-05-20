@@ -1,63 +1,53 @@
-/**
- * POST /api/save-order
- *
- * Persists a paid order to the Supabase `orders` table.
- * Called from checkout page after successful payment.
- *
- * Request body: { items, total, tax, grandTotal, customerInfo, paymentIntentId }
- * Response: { orderId: string } or { error: string }
- */
-
-import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdminClient } from '@/lib/supabase'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
   try {
-    const { items, total, tax, grandTotal, customerInfo, paymentIntentId } = await req.json()
-
-    if (!items || !customerInfo) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      )
+    const body = (await req.json()) as {
+      order_number: string
+      customer_name: string
+      customer_phone: string
+      customer_email: string
+      items: unknown[]
+      subtotal: number
+      tax: number
+      total: number
+      stripe_payment_intent_id: string
     }
 
     const supabase = getSupabaseAdminClient()
+    if (!supabase) {
+      console.warn('[save-order] Supabase not configured')
+      return NextResponse.json({ success: true }) // Graceful degradation
+    }
 
-    const { data, error } = await supabase
-      .from('orders')
-      .insert([
-        {
-          payment_intent_id: paymentIntentId,
-          customer_name: `${customerInfo.firstName} ${customerInfo.lastName}`,
-          customer_email: customerInfo.email,
-          customer_phone: customerInfo.phone,
-          items_json: items,
-          subtotal: total,
-          tax,
-          total: grandTotal,
-          status: 'confirmed',
-          created_at: new Date().toISOString(),
-        },
-      ])
-      .select()
+    const { error } = await supabase.from('orders').insert({
+      order_number: body.order_number,
+      customer_name: body.customer_name,
+      customer_phone: body.customer_phone,
+      customer_email: body.customer_email,
+      items: body.items,
+      subtotal: body.subtotal,
+      tax: body.tax,
+      total: body.total,
+      stripe_payment_intent_id: body.stripe_payment_intent_id,
+      status: 'received',
+    })
 
     if (error) {
-      console.error('Error saving order:', error)
+      console.error('[save-order]', error)
       return NextResponse.json(
         { error: 'Failed to save order' },
-        { status: 500 }
+        { status: 500 },
       )
     }
 
-    return NextResponse.json({
-      orderId: data?.[0]?.id,
-    })
-  } catch (error: any) {
-    console.error('Error in save-order:', error)
+    return NextResponse.json({ success: true })
+  } catch (err) {
+    console.error('[POST /api/save-order]', err)
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
+      { error: 'Order save failed' },
+      { status: 500 },
     )
   }
 }

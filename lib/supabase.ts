@@ -1,54 +1,58 @@
 /**
  * Supabase client factories.
  *
- * - getSupabaseAdminClient()   — server-side, uses SERVICE_ROLE_KEY
- * - getSupabaseAnonClient()    — browser-side, uses ANON_KEY
- * - getSupabaseClient()        — server component, uses ANON_KEY
+ * - getSupabaseAdminClient()   — server-side, uses SERVICE_ROLE_KEY if available,
+ *   falls back to anon key. Used in API routes for writes.
+ * - getSupabaseBrowserClient() — for the browser (anon key only).
  *
- * WARNING: SERVICE_ROLE_KEY bypasses Row Level Security (RLS).
- * Only use on the server; never expose to the browser.
+ * Returns `null` if Supabase isn't configured so the app degrades gracefully
+ * (payment can still succeed even if saving the order to the DB fails).
  */
 
-import { createClient } from '@supabase/supabase-js'
+import {
+  createClient,
+  type SupabaseClient,
+} from '@supabase/supabase-js'
 
-if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-  throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL')
-}
+let adminClient: SupabaseClient | null | undefined
+let browserClient: SupabaseClient | null | undefined
 
-if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-  throw new Error('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY')
-}
+export function getSupabaseAdminClient(): SupabaseClient | null {
+  if (adminClient !== undefined) return adminClient
 
-if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-  throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY')
-}
-
-/* Server-side admin client (bypasses RLS) */
-export function getSupabaseAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    }
-  )
-}
-
-/* Browser-side anon client */
-export function getSupabaseAnonClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ??
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  )
+
+  if (!url || !key) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      '[supabase] NEXT_PUBLIC_SUPABASE_URL and a key (service role or anon) are required. Order persistence disabled.',
+    )
+    adminClient = null
+    return null
+  }
+
+  adminClient = createClient(url, key, {
+    auth: { persistSession: false },
+  })
+  return adminClient
 }
 
-/* Server component anon client */
-export function getSupabaseClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  )
+export function getSupabaseBrowserClient(): SupabaseClient | null {
+  if (browserClient !== undefined) return browserClient
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!url || !key) {
+    browserClient = null
+    return null
+  }
+
+  browserClient = createClient(url, key, {
+    auth: { persistSession: false },
+  })
+  return browserClient
 }

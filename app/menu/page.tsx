@@ -29,17 +29,18 @@ export default function MenuPage() {
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const catName = entry.target.id.replace('cat-', '') as Category
-            setActive(catName)
-          }
-        })
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
+        if (visible) {
+          const id = visible.target.id.replace('cat-', '') as Category
+          setActive(id)
+        }
       },
-      { threshold: 0.3 }
+      { rootMargin: '-180px 0px -55% 0px', threshold: [0.1, 0.5] },
     )
-    categories.forEach(cat => {
-      const el = document.getElementById(`cat-${cat}`)
+    categories.forEach((c) => {
+      const el = document.getElementById(`cat-${c.key}`)
       if (el) observer.observe(el)
     })
     return () => observer.disconnect()
@@ -48,85 +49,314 @@ export default function MenuPage() {
   return (
     <>
       <Header />
-      <main style={{
-        minHeight: '100vh',
-        backgroundColor: '#1a1a1a',
-        paddingBottom: '40px',
-      }}>
-        {/* Sticky Category Nav */}
-        <div style={{
-          position: 'sticky',
-          top: 0,
-          backgroundColor: '#1a1a1a',
-          borderBottom: '1px solid #404040',
-          zIndex: 50,
-          paddingTop: '16px',
-          paddingBottom: '16px',
-        }}>
-          <div style={{
-            maxWidth: '1200px',
-            margin: '0 auto',
-            paddingLeft: '20px',
-            paddingRight: '20px',
-          }}>
-            <CategoryNav active={active} onSelect={handleSelect} />
+      <main style={{ paddingBottom: '6rem' }}>
+        {/* Page header */}
+        <section
+          style={{
+            padding: '4rem 0 2.5rem',
+            textAlign: 'center',
+            position: 'relative',
+            zIndex: 2,
+          }}
+        >
+          <div className="container">
+            <span
+              className="f-mono"
+              style={{
+                fontSize: '0.75rem',
+                color: 'var(--amber)',
+                letterSpacing: '0.18em',
+                display: 'block',
+                marginBottom: '0.8rem',
+              }}
+            >
+              EVERYTHING ON THE MENU
+            </span>
+            <h1
+              className="f-display"
+              style={{
+                fontSize: 'clamp(2.4rem, 6vw, 4.4rem)',
+                color: 'var(--cream)',
+                margin: 0,
+                marginBottom: '0.8rem',
+                letterSpacing: '-0.01em',
+              }}
+            >
+              What Are You Craving Today?
+            </h1>
+            <p
+              style={{
+                fontFamily: 'var(--f-body)',
+                color: 'var(--cream-muted)',
+                fontSize: '1.1rem',
+                maxWidth: '52ch',
+                margin: '0 auto',
+                lineHeight: 1.6,
+              }}
+            >
+              Made fresh every morning. Order online, pick up fast.
+            </p>
           </div>
-        </div>
+        </section>
 
-        {/* Content Grid */}
-        <div style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          padding: '20px',
-          display: 'grid',
-          gridTemplateColumns: '1fr 350px',
-          gap: '32px',
-          alignItems: 'start',
-        }}>
-          {/* Menu Items */}
-          <div>
-            {categories.map(cat => (
-              <section
-                key={cat}
-                id={`cat-${cat}`}
-                style={{
-                  marginBottom: '60px',
-                  scrollMarginTop: '140px',
-                }}
-              >
-                <h2 style={{
-                  fontSize: '32px',
-                  fontWeight: 'bold',
-                  color: '#f4a460',
-                  marginBottom: '24px',
-                  textTransform: 'capitalize',
-                }}>
-                  {cat}
-                </h2>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-                  gap: '20px',
-                }}>
-                  {itemsByCategory[cat].map(item => (
-                    <MenuCard key={item.id} item={item} />
-                  ))}
-                </div>
-              </section>
-            ))}
-          </div>
+        {/* Category nav */}
+        <CategoryNav active={active} onSelect={handleSelect} stickyTop={72} />
 
-          {/* Right Sidebar: Bowl Builder + Cart */}
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '20px',
-          }}>
-            <BowlBuilder />
-            <Cart />
+        {/* Bowl Builder — full hero section */}
+        <section
+          id="cat-bowl"
+          style={{
+            padding: '4rem 0',
+            position: 'relative',
+            zIndex: 2,
+          }}
+        >
+          <div className="container">
+            <CategoryHeader catKey="bowl" />
+            <div style={{ marginTop: '2.5rem' }}>
+              <BowlBuilder />
+            </div>
           </div>
-        </div>
+        </section>
+
+        {/* Tiffin */}
+        <CategorySection catKey="tiffin" />
+
+        {/* Street Fusion — with sub-section labels */}
+        <section
+          id="cat-street"
+          style={{
+            padding: '4rem 0',
+            background: 'var(--charcoal-2)',
+            position: 'relative',
+            zIndex: 2,
+          }}
+        >
+          <div className="container">
+            <CategoryHeader catKey="street" />
+
+            <h3
+              className="f-bold"
+              style={{
+                marginTop: '3rem',
+                marginBottom: '0.6rem',
+                color: 'var(--amber)',
+                fontSize: '0.95rem',
+                letterSpacing: '0.1em',
+              }}
+            >
+              🌮 PITA FIESTA TACOS · 1 PC EACH
+            </h3>
+            <p
+              style={{
+                fontFamily: 'var(--f-body)',
+                color: 'var(--cream-muted)',
+                fontStyle: 'italic',
+                marginBottom: '1.5rem',
+                fontSize: '0.95rem',
+              }}
+            >
+              Indian fillings. Pita shells. Born on the street.
+            </p>
+            <ItemGrid
+              ids={['taco-chicken', 'taco-paneer', 'taco-egg', 'taco-chana']}
+            />
+
+            <h3
+              className="f-bold"
+              style={{
+                marginTop: '3rem',
+                marginBottom: '0.6rem',
+                color: 'var(--amber)',
+                fontSize: '0.95rem',
+                letterSpacing: '0.1em',
+              }}
+            >
+              🧀 DESI QUESADILLAS
+            </h3>
+            <p
+              style={{
+                fontFamily: 'var(--f-body)',
+                color: 'var(--cream-muted)',
+                fontStyle: 'italic',
+                marginBottom: '1.5rem',
+                fontSize: '0.95rem',
+              }}
+            >
+              Melted cheese. Indian soul. You didn&apos;t know you needed this.
+            </p>
+            <ItemGrid
+              ids={[
+                'quesadilla-chicken',
+                'quesadilla-paneer',
+                'quesadilla-egg',
+                'quesadilla-cheese',
+              ]}
+            />
+          </div>
+        </section>
+
+        <CategorySection catKey="grill" />
+        <CategorySection catKey="biryani" background="var(--charcoal-2)" />
+        <CategorySection catKey="snacks" />
+        <CategorySection catKey="drinks" background="var(--charcoal-2)" />
+
+        {/* Allergy note */}
+        <section style={{ padding: '2.5rem 0', borderTop: '1px solid rgba(255,245,230,0.06)' }}>
+          <div className="container" style={{ textAlign: 'center' }}>
+            <p
+              className="f-mono"
+              style={{
+                fontSize: '0.7rem',
+                color: 'var(--cream-faint)',
+                letterSpacing: '0.12em',
+                margin: 0,
+                lineHeight: 1.8,
+              }}
+            >
+              HALAL AVAILABLE · JAIN ON REQUEST · MAY CONTAIN: GLUTEN · DAIRY · NUTS
+              <br />
+              ALWAYS INFORM OUR STAFF OF ALLERGIES · SHARED KITCHEN
+            </p>
+          </div>
+        </section>
       </main>
+      <Cart />
     </>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Helpers                                                                   */
+/* -------------------------------------------------------------------------- */
+
+function CategorySection({
+  catKey,
+  background,
+}: {
+  catKey: Category
+  background?: string
+}) {
+  const items = itemsByCategory(catKey)
+  return (
+    <section
+      id={`cat-${catKey}`}
+      style={{
+        padding: '4rem 0',
+        background: background ?? 'transparent',
+        position: 'relative',
+        zIndex: 2,
+      }}
+    >
+      <div className="container">
+        <CategoryHeader catKey={catKey} />
+        <div style={{ marginTop: '2.5rem' }}>
+          <ItemGrid ids={items.map((i) => i.id)} />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function CategoryHeader({ catKey }: { catKey: Category }) {
+  const meta = categories.find((c) => c.key === catKey)
+  if (!meta) return null
+  return (
+    <header style={{ maxWidth: '720px' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.8rem',
+          marginBottom: '0.6rem',
+        }}
+      >
+        <span
+          className="f-mono"
+          style={{
+            fontSize: '0.7rem',
+            color: 'var(--amber)',
+            letterSpacing: '0.18em',
+          }}
+        >
+          {meta.number} · {meta.subLabel ?? meta.title.toUpperCase()}
+        </span>
+      </div>
+      <h2
+        className="f-display"
+        style={{
+          fontSize: 'clamp(2rem, 4.5vw, 3.2rem)',
+          color: 'var(--cream)',
+          margin: 0,
+          marginBottom: '1rem',
+          letterSpacing: '-0.01em',
+        }}
+      >
+        <span style={{ marginRight: '0.6rem' }} aria-hidden="true">{meta.emoji}</span>
+        {meta.title}
+      </h2>
+      <p
+        style={{
+          fontFamily: 'var(--f-body)',
+          color: 'var(--cream-muted)',
+          fontSize: '1.05rem',
+          lineHeight: 1.6,
+          margin: 0,
+        }}
+      >
+        {meta.appetiteCopy}
+      </p>
+      {meta.note && (
+        <p
+          className="f-mono"
+          style={{
+            fontSize: '0.7rem',
+            color: 'var(--amber)',
+            letterSpacing: '0.1em',
+            marginTop: '0.8rem',
+          }}
+        >
+          {meta.note}
+        </p>
+      )}
+    </header>
+  )
+}
+
+function ItemGrid({ ids }: { ids: string[] }) {
+  const allItems = ids
+    .map((id) => itemsByCategory('bowl').concat(
+      itemsByCategory('tiffin'),
+      itemsByCategory('street'),
+      itemsByCategory('grill'),
+      itemsByCategory('biryani'),
+      itemsByCategory('snacks'),
+      itemsByCategory('drinks'),
+    ).find((i) => i.id === id))
+    .filter((x): x is NonNullable<typeof x> => x != null)
+
+  if (allItems.length === 0) return null
+
+  return (
+    <div
+      className="menu-grid"
+      style={{
+        display: 'grid',
+        gap: '1.5rem',
+        gridTemplateColumns: '1fr',
+      }}
+    >
+      <style>{`
+        @media (min-width: 640px) {
+          .menu-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+        @media (min-width: 1024px) {
+          .menu-grid { grid-template-columns: repeat(3, 1fr) !important; }
+        }
+      `}</style>
+      {allItems.map((item) => (
+        <MenuCard key={item.id} item={item} />
+      ))}
+    </div>
   )
 }

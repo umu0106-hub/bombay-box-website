@@ -1,55 +1,89 @@
 'use client'
 
-export function SteamEffect() {
+/**
+ * SteamEffect — reusable CSS/SVG steam wisps.
+ *
+ * Drop into any card or section to add warmth. Each wisp draws itself
+ * upward via stroke-dashoffset, fades, and restarts.
+ */
+
+import { useId } from 'react'
+
+interface Props {
+  /** Number of wisps (default 3) */
+  count?: number
+  /** Width of the area in px (default 60) */
+  width?: number
+  /** Height of the area in px (default 80) */
+  height?: number
+  /** Stroke color (default cream) */
+  color?: string
+  /** Animation duration in seconds */
+  duration?: number
+  /** Stroke width */
+  strokeWidth?: number
+  /** Opacity */
+  opacity?: number
+  className?: string
+}
+
+export default function SteamEffect({
+  count = 3,
+  width = 60,
+  height = 80,
+  color = '#FFF5E6',
+  duration = 2.5,
+  strokeWidth = 2,
+  opacity = 0.7,
+  className,
+}: Props) {
+  const uid = useId().replace(/:/g, '')
+  const cols = Math.max(2, count)
+  const segment = width / (cols + 1)
+
+  /* Build wisps spaced across width */
+  const wisps = Array.from({ length: count }).map((_, i) => {
+    const x = segment * (i + 1)
+    /* Curve direction alternates */
+    const dir = i % 2 === 0 ? 1 : -1
+    const startY = height * 0.85
+    const midY = height * 0.5
+    const endY = height * 0.05
+    const sway = 6
+    const d = `M ${x} ${startY} C ${x + sway * dir} ${midY + 10}, ${x - sway * dir} ${midY - 10}, ${x} ${endY}`
+    const delay = i * (duration / count) * 0.6
+    return { d, key: `${uid}-${i}`, delay }
+  })
+
   return (
-    <div
-      style={{
-        position: 'relative',
-        width: '100px',
-        height: '100px',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'flex-start',
-        gap: '20px',
-        paddingTop: '20px',
-      }}
+    <svg
+      className={className}
+      viewBox={`0 0 ${width} ${height}`}
+      width={width}
+      height={height}
+      style={{ overflow: 'visible' }}
+      aria-hidden="true"
     >
-      {[0, 1, 2].map((i) => (
-        <div
-          key={i}
-          style={{
-            position: 'relative',
-            width: '20px',
-            height: '60px',
-          }}
-        >
-          <svg
-            viewBox="0 0 20 60"
-            width="20"
-            height="60"
+      <g
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        fill="none"
+        opacity={opacity}
+      >
+        {wisps.map((w) => (
+          <path
+            key={w.key}
+            d={w.d}
+            strokeDasharray="120"
+            strokeDashoffset="120"
             style={{
-              animation: `steam ${1.5 + i * 0.2}s ease-in infinite`,
-              animationDelay: `${i * 0.2}s`,
+              animation: `steamRise ${duration}s ease-out infinite`,
+              animationDelay: `${w.delay}s`,
             }}
-          >
-            <circle cx="10" cy="10" r="6" fill="#fbbf24" opacity="0.6" />
-            <circle cx="10" cy="20" r="5" fill="#fbbf24" opacity="0.5" />
-            <circle cx="10" cy="30" r="4" fill="#fbbf24" opacity="0.4" />
-          </svg>
-        </div>
-      ))}
-      <style>{`
-        @keyframes steam {
-          0% {
-            transform: translateY(0) scaleY(1);
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(-60px) scaleY(0.8);
-            opacity: 0;
-          }
-        }
-      `}</style>
-    </div>
+          />
+        ))}
+      </g>
+    </svg>
   )
 }

@@ -16,14 +16,13 @@ import {
 } from '@stripe/react-stripe-js'
 import Header from '@/components/Header'
 import { useCart } from '@/components/CartContext'
-import { useStripeConfig } from '@/lib/stripe'
 import { RESTAURANT } from '@/lib/menu'
 import type { CartItem } from '@/components/CartContext'
 
 const CheckoutPage = () => {
   const router = useRouter()
   const { cart, clearCart } = useCart()
-  const { stripeKey } = useStripeConfig()
+  const stripeKey = process.env.NEXT_PUBLIC_STRIPE_KEY
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)

@@ -17,11 +17,10 @@ import {
 import Header from '@/components/Header'
 import { useCart } from '@/components/CartContext'
 import { RESTAURANT } from '@/lib/menu'
-import type { CartItem } from '@/components/CartContext'
 
 const CheckoutPage = () => {
   const router = useRouter()
-  const { cart, clearCart } = useCart()
+  const { items, clearCart, subtotal, tax, total } = useCart()
   const stripeKey = process.env.NEXT_PUBLIC_STRIPE_KEY
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -29,24 +28,8 @@ const CheckoutPage = () => {
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
-  const [notes, setNotes] = useState('')
 
   const stripePromise = stripeKey ? loadStripe(stripeKey) : null
-
-  const subtotal = useMemo(
-    () =>
-      cart.reduce(
-        (sum, item) =>
-          sum +
-          (item.basePrice + item.upcharges.reduce((acc, up) => acc + up, 0)) *
-            item.quantity,
-        0
-      ),
-    [cart]
-  )
-
-  const tax = useMemo(() => subtotal * RESTAURANT.taxRate, [subtotal])
-  const total = useMemo(() => subtotal + tax, [subtotal, tax])
 
   useEffect(() => {
     if (!stripePromise || total <= 0) return
@@ -63,8 +46,8 @@ const CheckoutPage = () => {
         })
 
         if (!response.ok) {
-          const error = await response.json()
-          setError(error.message || 'Failed to create payment intent')
+          const err = await response.json()
+          setError(err.message || 'Failed to create payment intent')
           return
         }
 
@@ -93,23 +76,23 @@ const CheckoutPage = () => {
             <section>
               <h2 style={{ fontSize: '24px', marginBottom: '20px', color: '#f4a460' }}>Order Summary</h2>
 
-              {cart.length === 0 ? (
+              {items.length === 0 ? (
                 <p style={{ color: '#aaa' }}>Your cart is empty</p>
               ) : (
                 <div style={{ backgroundColor: '#2d2d2d', padding: '20px', borderRadius: '8px' }}>
-                  {cart.map((item, idx) => (
+                  {items.map((item, idx) => (
                     <div key={idx} style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #444' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span style={{ color: '#fff' }}>
                           {item.name} x {item.quantity}
                         </span>
                         <span style={{ color: '#f4a460' }}>
-                          ${((item.basePrice + item.upcharges.reduce((a, u) => a + u, 0)) * item.quantity).toFixed(2)}
+                          ${(item.price * item.quantity).toFixed(2)}
                         </span>
                       </div>
-                      {item.selectedOptions && item.selectedOptions.length > 0 && (
+                      {item.customizations && item.customizations.length > 0 && (
                         <div style={{ fontSize: '12px', color: '#aaa', marginTop: '4px' }}>
-                          {item.selectedOptions.map((opt) => opt.name).join(', ')}
+                          {item.customizations.map((cust) => cust.name).join(', ')}
                         </div>
                       )}
                     </div>
@@ -151,7 +134,7 @@ const CheckoutPage = () => {
                 </div>
               )}
 
-              {cart.length === 0 ? (
+              {items.length === 0 ? (
                 <p style={{ color: '#aaa' }}>Add items to your cart to proceed</p>
               ) : (
                 <form onSubmit={(e) => e.preventDefault()}>
@@ -222,7 +205,7 @@ const CheckoutPage = () => {
                       stripe={stripePromise}
                       options={{ clientSecret, appearance: { theme: 'dark' } }}
                     >
-                      <PaymentForm subtotal={subtotal} tax={tax} />
+                      <PaymentForm items={items} subtotal={subtotal} tax={tax} clearCart={clearCart} />
                     </Elements>
                   ) : (
                     <p style={{ color: '#aaa' }}>Loading payment system...</p>
@@ -238,15 +221,16 @@ const CheckoutPage = () => {
 }
 
 interface PaymentFormProps {
+  items: any[]
   subtotal: number
   tax: number
+  clearCart: () => void
 }
 
-const PaymentForm: React.FC<PaymentFormProps> = ({ subtotal, tax }) => {
+const PaymentForm: React.FC<PaymentFormProps> = ({ items, subtotal, tax, clearCart }) => {
   const stripe = useStripe()
   const elements = useElements()
   const router = useRouter()
-  const { cart, clearCart } = useCart()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -281,7 +265,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ subtotal, tax }) => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            items: cart,
+            items,
             stripePaymentIntentId: paymentIntent.id,
             total,
           }),

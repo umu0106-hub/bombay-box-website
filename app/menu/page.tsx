@@ -119,9 +119,6 @@ export default function MenuPage() {
           </div>
         </section>
 
-        {/* Tiffin */}
-        <CategorySection catKey="tiffin" />
-
         {/* Street Fusion — with sub-section labels */}
         <section
           id="cat-street"
@@ -326,7 +323,6 @@ function CategoryHeader({ catKey }: { catKey: Category }) {
 function ItemGrid({ ids }: { ids: string[] }) {
   const allItems = ids
     .map((id) => itemsByCategory('bowl').concat(
-      itemsByCategory('tiffin'),
       itemsByCategory('street'),
       itemsByCategory('grill'),
       itemsByCategory('biryani'),

@@ -3,6 +3,5 @@
   "framework": "nextjs",
   "buildCommand": "next build",
   "installCommand": "npm install",
-  "regions": ["iad1"],
-  "_rebuilt": "2026-05-25T04:00:29Z"
+  "regions": ["iad1"]
 }

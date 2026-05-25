@@ -8,8 +8,7 @@ import BowlBuilder from '@/components/BowlBuilder'
 import Cart from '@/components/Cart'
 import {
   categories,
-  getItemsByCategory,
-  menuItems,
+  itemsByCategory,
   type Category,
 } from '@/lib/menu'
 
@@ -135,7 +134,65 @@ export default function MenuPage() {
         >
           <div className="container">
             <CategoryHeader catKey="street" />
-            <ItemGrid ids={getItemsByCategory('street').map((i) => i.id)} />
+
+            <h3
+              className="f-bold"
+              style={{
+                marginTop: '3rem',
+                marginBottom: '0.6rem',
+                color: 'var(--amber)',
+                fontSize: '0.95rem',
+                letterSpacing: '0.1em',
+              }}
+            >
+              🌮 PITA FIESTA TACOS · 1 PC EACH
+            </h3>
+            <p
+              style={{
+                fontFamily: 'var(--f-body)',
+                color: 'var(--cream-muted)',
+                fontStyle: 'italic',
+                marginBottom: '1.5rem',
+                fontSize: '0.95rem',
+              }}
+            >
+              Indian fillings. Pita shells. Born on the street.
+            </p>
+            <ItemGrid
+              ids={['taco-chicken', 'taco-paneer', 'taco-egg', 'taco-chana']}
+            />
+
+            <h3
+              className="f-bold"
+              style={{
+                marginTop: '3rem',
+                marginBottom: '0.6rem',
+                color: 'var(--amber)',
+                fontSize: '0.95rem',
+                letterSpacing: '0.1em',
+              }}
+            >
+              🧀 DESI QUESADILLAS
+            </h3>
+            <p
+              style={{
+                fontFamily: 'var(--f-body)',
+                color: 'var(--cream-muted)',
+                fontStyle: 'italic',
+                marginBottom: '1.5rem',
+                fontSize: '0.95rem',
+              }}
+            >
+              Melted cheese. Indian soul. You didn&apos;t know you needed this.
+            </p>
+            <ItemGrid
+              ids={[
+                'quesadilla-chicken',
+                'quesadilla-paneer',
+                'quesadilla-egg',
+                'quesadilla-cheese',
+              ]}
+            />
           </div>
         </section>
 
@@ -180,7 +237,7 @@ function CategorySection({
   catKey: Category
   background?: string
 }) {
-  const items = getItemsByCategory(catKey)
+  const items = itemsByCategory(catKey)
   return (
     <section
       id={`cat-${catKey}`}
@@ -268,7 +325,14 @@ function CategoryHeader({ catKey }: { catKey: Category }) {
 
 function ItemGrid({ ids }: { ids: string[] }) {
   const allItems = ids
-    .map((id) => menuItems.find((i) => i.id === id))
+    .map((id) => itemsByCategory('bowl').concat(
+      itemsByCategory('tiffin'),
+      itemsByCategory('street'),
+      itemsByCategory('grill'),
+      itemsByCategory('biryani'),
+      itemsByCategory('snacks'),
+      itemsByCategory('drinks'),
+    ).find((i) => i.id === id))
     .filter((x): x is NonNullable<typeof x> => x != null)
 
   if (allItems.length === 0) return null

@@ -119,7 +119,7 @@ export default function Cart() {
                 fontFamily: 'var(--f-mono)',
                 fontSize: '0.7rem',
                 letterSpacing: '0.12em',
-                color: 'var(--amber)',
+                color: 'var(--gold)',
               }}
             >
               YOUR ORDER
@@ -237,7 +237,7 @@ export default function Cart() {
                   <span
                     style={{
                       fontFamily: 'var(--f-bold)',
-                      color: 'var(--saffron)',
+                      color: 'var(--gold)',
                       fontSize: '1rem',
                       flexShrink: 0,
                     }}
@@ -261,7 +261,7 @@ export default function Cart() {
                       <li style={lineMono}>Sauces · {item.customizations.sauces.join(', ')}</li>
                     )}
                     {item.customizations.extraSauces && item.customizations.extraSauces.length > 0 && (
-                      <li style={{ ...lineMono, color: 'var(--amber)' }}>
+                      <li style={{ ...lineMono, color: 'var(--gold)' }}>
                         Extra · {item.customizations.extraSauces.join(', ')}
                       </li>
                     )}
@@ -322,7 +322,7 @@ export default function Cart() {
                       minHeight: '36px',
                       transition: 'color 0.2s',
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--spice)' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--terracotta)' }}
                     onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--cream-muted)' }}
                   >
                     Remove
@@ -417,8 +417,8 @@ function QtyBtn({
         transition: 'background 0.2s, color 0.2s',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.background = 'var(--saffron)'
-        e.currentTarget.style.color = 'var(--charcoal)'
+        e.currentTarget.style.background = 'var(--terracotta)'
+        e.currentTarget.style.color = 'var(--white)'
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.background = 'transparent'
@@ -466,7 +466,7 @@ function TotalRow({
         style={{
           fontFamily: 'var(--f-bold)',
           fontSize: emphasized ? '1.5rem' : '0.95rem',
-          color: emphasized ? 'var(--saffron)' : muted ? 'var(--cream-muted)' : 'var(--cream)',
+          color: emphasized ? 'var(--gold)' : muted ? 'var(--cream-muted)' : 'var(--cream)',
         }}
       >
         {value}

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Yeseva_One, Archivo_Black, Lora, DM_Mono } from 'next/font/google'
 import { CartProvider } from '@/components/CartContext'
+import Footer from '@/components/Footer'
 import '@/styles/globals.css'
 
 const yeseva = Yeseva_One({
@@ -32,23 +33,23 @@ const dmMono = DM_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://eatbombaybox.com'),
-  title: 'Bombay Box · Fast Indian Takeout · Rochelle Park NJ',
+  title: 'Bombay Box · Premium Indian Fast Casual · Rochelle Park NJ',
   description:
-    'Fresh ingredients. Made every day. Build your bowl, grab a tiffin, or try street fusion. Fast Indian takeout in Rochelle Park, NJ.',
+    'Fresh, premium Indian fast casual. Build your bowl, explore street fusion, or indulge in tandoori specialties. Made daily in Rochelle Park, NJ.',
   keywords: [
     'Indian takeout',
     'Rochelle Park',
     'New Jersey',
     'biryani',
     'tikka',
-    'tiffin',
+    'tandoori',
     'paneer',
-    'halal',
+    'bowl',
     'fast Indian food',
   ],
   openGraph: {
-    title: 'Bombay Box · Fast Indian Takeout',
-    description: 'Fresh Indian food, made daily. Inside Subzi Bazar, Rochelle Park NJ.',
+    title: 'Bombay Box · Premium Indian Fast Casual',
+    description: 'Fresh Indian food, made daily. Rochelle Park, NJ.',
     url: 'https://eatbombaybox.com',
     siteName: 'Bombay Box',
     locale: 'en_US',
@@ -56,8 +57,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Bombay Box · Fast Indian Takeout',
-    description: 'Fresh Indian food, made daily. Inside Subzi Bazar, Rochelle Park NJ.',
+    title: 'Bombay Box · Premium Indian Fast Casual',
+    description: 'Fresh Indian food, made daily. Rochelle Park, NJ.',
   },
   robots: { index: true, follow: true },
 }
@@ -76,7 +77,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${yeseva.variable} ${archivoBlack.variable} ${lora.variable} ${dmMono.variable}`}
     >
       <body>
-        <CartProvider>{children}</CartProvider>
+        <CartProvider>
+          {children}
+          <Footer />
+        </CartProvider>
       </body>
     </html>
   )

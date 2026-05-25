@@ -225,15 +225,15 @@ function ConfirmationContent() {
             <DetailBlock
               icon="📍"
               label="PICK UP AT"
-              value={RESTAURANT.address}
-              sub={RESTAURANT.addressDetail}
+              value={RESTAURANT.location}
+              sub={RESTAURANT.inside}
             />
             <DetailBlock
               icon="📞"
               label="QUESTIONS?"
               value={RESTAURANT.phone}
               isLink
-              href={RESTAURANT.phoneHref}
+              href={`tel:${RESTAURANT.phone}`}
             />
           </div>
 
@@ -274,7 +274,7 @@ function ConfirmationContent() {
 
         {/* Map link */}
         <a
-          href={`https://maps.google.com/?q=${encodeURIComponent(RESTAURANT.address)}`}
+          href={`https://maps.google.com/?q=${encodeURIComponent(RESTAURANT.location)}`}
           target="_blank"
           rel="noopener noreferrer"
           style={{

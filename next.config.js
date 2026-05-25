@@ -1,3 +1,4 @@
+// Rebuilt: Sun May 24 23:30:48 EDT 2026
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   headers: async () => [

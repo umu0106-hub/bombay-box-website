@@ -393,3 +393,14 @@ export function getMenuItemById(id: string): MenuItem | undefined {
 export function getItemsByCategory(category: Category): MenuItem[] {
   return menuItems.filter((item) => item.category === category)
 }
+
+export function getBadgeLabel(b: BadgeKey): { label: string; cls: string } {
+  switch (b) {
+    case 'popular': return { label: '⭐ Most Popular', cls: 'badge-amber' }
+    case 'new':     return { label: '✨ New & Trending', cls: 'badge-sage' }
+    case 'chef':    return { label: "👨‍🍳 Chef's Pick", cls: 'badge-spice' }
+    case 'veg':     return { label: '🌿 Veg', cls: 'badge-veg' }
+    case 'nonveg':  return { label: '🥩 Non-Veg', cls: 'badge-nonveg' }
+    case 'staff':   return { label: '🔥 Staff Favorite', cls: 'badge-saffron' }
+  }
+}

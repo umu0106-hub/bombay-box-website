@@ -191,7 +191,7 @@ export default function CheckoutPage() {
                 fontSize: '1rem',
               }}
             >
-              Pickup at {RESTAURANT.address}
+              Pickup at {RESTAURANT.location}
             </p>
           </div>
         </section>

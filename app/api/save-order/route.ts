@@ -1,53 +1,117 @@
+/**
+ * POST /api/save-order
+ *
+ * Persists a paid order to the Supabase `orders` table.
+ * Called after a successful Stripe payment.
+ *
+ * Body shape:
+ *   {
+ *     orderNumber: string,
+ *     customer: { name, phone, email },
+ *     items: CartItem[],
+ *     subtotal, tax, total: number,
+ *     stripePaymentIntentId: string | null
+ *   }
+ *
+ * Response:
+ *   200 { ok: true, id: string }
+ *   4xx/5xx { error: string }
+ */
+
+import { NextResponse } from 'next/server'
 import { getSupabaseAdminClient } from '@/lib/supabase'
-import { NextRequest, NextResponse } from 'next/server'
 
-export async function POST(req: NextRequest) {
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
+interface RequestBody {
+  orderNumber: string
+  customer: {
+    name: string
+    phone: string
+    email: string
+  }
+  items: Array<{
+    id: string
+    menuItemId: string
+    name: string
+    price: number
+    quantity: number
+    customizations?: unknown
+  }>
+  subtotal: number
+  tax: number
+  total: number
+  stripePaymentIntentId: string | null
+}
+
+export async function POST(req: Request) {
+  let body: RequestBody
   try {
-    const body = (await req.json()) as {
-      order_number: string
-      customer_name: string
-      customer_phone: string
-      customer_email: string
-      items: unknown[]
-      subtotal: number
-      tax: number
-      total: number
-      stripe_payment_intent_id: string
-    }
+    body = (await req.json()) as RequestBody
+  } catch {
+    return NextResponse.json(
+      { error: 'Invalid JSON in request body' },
+      { status: 400 },
+    )
+  }
 
-    const supabase = getSupabaseAdminClient()
-    if (!supabase) {
-      console.warn('[save-order] Supabase not configured')
-      return NextResponse.json({ success: true }) // Graceful degradation
-    }
+  /* Basic validation */
+  if (!body.orderNumber || typeof body.orderNumber !== 'string') {
+    return NextResponse.json(
+      { error: 'orderNumber required' },
+      { status: 400 },
+    )
+  }
+  if (!body.customer?.name || !body.customer?.phone || !body.customer?.email) {
+    return NextResponse.json(
+      { error: 'Customer name, phone, and email required' },
+      { status: 400 },
+    )
+  }
+  if (!Array.isArray(body.items) || body.items.length === 0) {
+    return NextResponse.json(
+      { error: 'Order must contain at least one item' },
+      { status: 400 },
+    )
+  }
 
-    const { error } = await supabase.from('orders').insert({
-      order_number: body.order_number,
-      customer_name: body.customer_name,
-      customer_phone: body.customer_phone,
-      customer_email: body.customer_email,
-      items: body.items,
-      subtotal: body.subtotal,
-      tax: body.tax,
-      total: body.total,
-      stripe_payment_intent_id: body.stripe_payment_intent_id,
-      status: 'received',
-    })
+  const supabase = getSupabaseAdminClient()
+  if (!supabase) {
+    /* Supabase not configured — fail gracefully so the customer's
+       order completion isn't blocked. Logged on the server. */
+    return NextResponse.json(
+      { ok: false, warning: 'Database not configured' },
+      { status: 200 },
+    )
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('orders')
+      .insert({
+        order_number: body.orderNumber,
+        customer_name: body.customer.name,
+        customer_phone: body.customer.phone,
+        customer_email: body.customer.email,
+        items: body.items,
+        subtotal: body.subtotal,
+        tax: body.tax,
+        total: body.total,
+        stripe_payment_intent_id: body.stripePaymentIntentId,
+        status: 'received',
+      })
+      .select('id')
+      .single()
 
     if (error) {
-      console.error('[save-order]', error)
-      return NextResponse.json(
-        { error: 'Failed to save order' },
-        { status: 500 },
-      )
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ ok: true, id: data?.id })
   } catch (err) {
-    console.error('[POST /api/save-order]', err)
-    return NextResponse.json(
-      { error: 'Order save failed' },
-      { status: 500 },
-    )
+    const message =
+      err instanceof Error ? err.message : 'Failed to save order'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

@@ -1,185 +1,329 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { useCart } from './CartContext'
+/**
+ * Cart — slide-in panel (right on desktop, bottom sheet on mobile).
+ *
+ * Shows line items with customizations, qty controls, subtotal/tax/total,
+ * and a checkout CTA. Closes on backdrop click, Escape, or after navigating
+ * to checkout.
+ */
+
+import Link from 'next/link'
+import { useEffect, useRef } from 'react'
 import { formatPrice, RESTAURANT } from '@/lib/menu'
+import { useCart } from './CartContext'
 
 export default function Cart() {
-  const { items, isOpen, closeCart, removeItem, updateQuantity, subtotal, tax, total } = useCart()
-  const sheetRef = useRef<HTMLDivElement>(null)
-  const [orderNumber, setOrderNumber] = useState<string>('')
+  const {
+    items,
+    removeItem,
+    updateQuantity,
+    subtotal,
+    tax,
+    total,
+    itemCount,
+    isOpen,
+    closeCart,
+  } = useCart()
 
-  /* Generate order number on first load */
-  useEffect(() => {
-    if (!orderNumber && items.length > 0) {
-      const num = `BB${Date.now().toString().slice(-6)}`
-      setOrderNumber(num)
-    }
-  }, [items.length, orderNumber])
+  const panelRef = useRef<HTMLDivElement>(null)
 
-  /* Close on outside click */
+  /* Lock body scroll while open + close on Escape */
   useEffect(() => {
     if (!isOpen) return
-    const onClickOutside = (e: MouseEvent) => {
-      if (sheetRef.current && !sheetRef.current.contains(e.target as Node)) {
-        closeCart()
-      }
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeCart()
     }
-    document.addEventListener('click', onClickOutside)
-    return () => document.removeEventListener('click', onClickOutside)
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = prev
+      window.removeEventListener('keydown', onKey)
+    }
   }, [isOpen, closeCart])
 
-  if (!isOpen) return null
-
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 200,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'flex-end',
-        backdropFilter: 'blur(4px)',
-      }}
-    >
+    <>
+      {/* Backdrop */}
       <div
-        ref={sheetRef}
+        onClick={closeCart}
+        aria-hidden={!isOpen}
         style={{
-          position: 'relative',
-          width: '100%',
-          maxHeight: '85vh',
-          backgroundColor: 'var(--bg-secondary)',
-          borderTopLeftRadius: '20px',
-          borderTopRightRadius: '20px',
-          borderTop: '1px solid var(--border-color)',
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.7)',
+          backdropFilter: 'blur(4px)',
+          opacity: isOpen ? 1 : 0,
+          pointerEvents: isOpen ? 'auto' : 'none',
+          transition: 'opacity 0.3s var(--ease-warm)',
+          zIndex: 200,
+        }}
+      />
+
+      {/* Panel */}
+      <aside
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Your order"
+        aria-hidden={!isOpen}
+        className="cart-panel"
+        style={{
+          position: 'fixed',
+          zIndex: 210,
+          background: 'var(--charcoal-2)',
+          color: 'var(--cream)',
           display: 'flex',
           flexDirection: 'column',
-          animation: 'slideUp 300ms var(--ease-smooth)',
+          boxShadow: '-20px 0 60px -20px rgba(0,0,0,0.8)',
+          transition: 'transform 0.4s var(--ease-warm), opacity 0.3s',
         }}
       >
+        <style>{`
+          .cart-panel {
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            max-width: 460px;
+            transform: ${isOpen ? 'translateX(0)' : 'translateX(100%)'};
+          }
+          @media (max-width: 640px) {
+            .cart-panel {
+              top: auto;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              max-width: 100%;
+              max-height: 88vh;
+              border-radius: 20px 20px 0 0;
+              transform: ${isOpen ? 'translateY(0)' : 'translateY(100%)'};
+            }
+          }
+        `}</style>
+
         {/* Header */}
         <div
           style={{
-            padding: '1.5rem',
-            borderBottom: '1px solid var(--border-color)',
             display: 'flex',
-            justifyContent: 'space-between',
             alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '1.4rem 1.5rem',
+            borderBottom: '1px solid rgba(255,245,230,0.08)',
           }}
         >
-          <h2 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--cream)' }}>Your Order</h2>
+          <div>
+            <div
+              style={{
+                fontFamily: 'var(--f-mono)',
+                fontSize: '0.7rem',
+                letterSpacing: '0.12em',
+                color: 'var(--amber)',
+              }}
+            >
+              YOUR ORDER
+            </div>
+            <h2
+              style={{
+                fontFamily: 'var(--f-display)',
+                fontSize: '1.6rem',
+                margin: 0,
+                marginTop: '4px',
+              }}
+            >
+              {itemCount === 0
+                ? 'Your bowl is empty'
+                : `${itemCount} item${itemCount === 1 ? '' : 's'}`}
+            </h2>
+          </div>
           <button
+            type="button"
             onClick={closeCart}
+            aria-label="Close cart"
             style={{
-              background: 'none',
-              border: 'none',
+              width: '44px',
+              height: '44px',
+              borderRadius: '50%',
+              background: 'rgba(255,245,230,0.06)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               color: 'var(--cream)',
-              fontSize: '1.5rem',
-              cursor: 'pointer',
-              padding: 0,
+              transition: 'background 0.2s',
             }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,245,230,0.12)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,245,230,0.06)' }}
           >
-            ✕
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="6" y1="6" x2="18" y2="18" />
+              <line x1="6" y1="18" x2="18" y2="6" />
+            </svg>
           </button>
         </div>
 
-        {/* Items Scroll */}
+        {/* Body — scrollable */}
         <div
           style={{
             flex: 1,
             overflowY: 'auto',
-            padding: '1rem',
-            gap: '1rem',
+            padding: '1.5rem',
             display: 'flex',
             flexDirection: 'column',
+            gap: '1rem',
           }}
         >
           {items.length === 0 ? (
-            <div style={{ padding: '2rem 1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-              Your cart is empty. Head to the menu to add something delicious!
+            <div
+              style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textAlign: 'center',
+                padding: '3rem 1rem',
+                gap: '1rem',
+              }}
+            >
+              <div style={{ fontSize: '3rem' }} aria-hidden="true">🍱</div>
+              <div
+                style={{
+                  fontFamily: 'var(--f-body)',
+                  color: 'var(--cream-muted)',
+                  fontSize: '1rem',
+                  maxWidth: '280px',
+                  lineHeight: 1.6,
+                }}
+              >
+                Nothing here yet. Head to the menu and start building something delicious.
+              </div>
+              <Link
+                href="/menu"
+                onClick={closeCart}
+                className="btn btn-primary"
+                style={{ marginTop: '0.8rem' }}
+              >
+                See the Menu
+              </Link>
             </div>
           ) : (
             items.map((item) => (
               <div
-                key={item.cartId}
+                key={item.id}
                 style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr auto',
-                  gap: '1rem',
-                  padding: '1rem',
-                  backgroundColor: 'var(--bg-tertiary)',
-                  borderRadius: 'var(--radius-md)',
-                  border: '1px solid var(--border-color)',
-                  alignItems: 'start',
+                  background: 'var(--charcoal)',
+                  border: '1px solid rgba(255,245,230,0.08)',
+                  borderRadius: '14px',
+                  padding: '1rem 1.1rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.6rem',
                 }}
               >
-                <div>
-                  <p style={{ margin: '0 0 0.5rem 0', fontWeight: '600', color: 'var(--cream)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
+                  <h3
+                    style={{
+                      fontFamily: 'var(--f-bold)',
+                      fontSize: '0.95rem',
+                      color: 'var(--cream)',
+                      letterSpacing: '0.02em',
+                      margin: 0,
+                      lineHeight: 1.3,
+                    }}
+                  >
                     {item.name}
-                  </p>
-                  {item.customizations.length > 0 && (
-                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                      {item.customizations.map((c) => c.name).join(', ')}
-                    </p>
-                  )}
-                  <p style={{ margin: '0.5rem 0 0 0', fontWeight: '700', color: 'var(--saffron)' }}>
-                    {formatPrice(item.price)}
-                  </p>
+                  </h3>
+                  <span
+                    style={{
+                      fontFamily: 'var(--f-bold)',
+                      color: 'var(--saffron)',
+                      fontSize: '1rem',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {formatPrice(item.price * item.quantity)}
+                  </span>
                 </div>
 
-                {/* Qty Controls */}
+                {item.customizations && (
+                  <ul
+                    style={{
+                      listStyle: 'none',
+                      padding: 0,
+                      margin: 0,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '3px',
+                    }}
+                  >
+                    {item.customizations.sauces && item.customizations.sauces.length > 0 && (
+                      <li style={lineMono}>Sauces · {item.customizations.sauces.join(', ')}</li>
+                    )}
+                    {item.customizations.extraSauces && item.customizations.extraSauces.length > 0 && (
+                      <li style={{ ...lineMono, color: 'var(--amber)' }}>
+                        Extra · {item.customizations.extraSauces.join(', ')}
+                      </li>
+                    )}
+                    {item.customizations.toppings && item.customizations.toppings.length > 0 && (
+                      <li style={lineMono}>
+                        Toppings · {item.customizations.toppings.length} added
+                      </li>
+                    )}
+                  </ul>
+                )}
+
                 <div
                   style={{
                     display: 'flex',
-                    gap: '0.5rem',
                     alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginTop: '0.3rem',
                   }}
                 >
-                  <button
-                    onClick={() => updateQuantity(item.cartId, item.quantity - 1)}
+                  <div
                     style={{
-                      width: '28px',
-                      height: '28px',
-                      borderRadius: '50%',
-                      border: '1px solid var(--saffron)',
-                      backgroundColor: 'transparent',
-                      color: 'var(--saffron)',
-                      cursor: 'pointer',
-                      fontSize: '1rem',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      border: '1px solid rgba(255,245,230,0.14)',
+                      borderRadius: '999px',
+                      padding: '2px',
                     }}
                   >
-                    −
-                  </button>
-                  <span style={{ width: '24px', textAlign: 'center', color: 'var(--cream)' }}>
-                    {item.quantity}
-                  </span>
+                    <QtyBtn
+                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      label="Decrease quantity"
+                    >−</QtyBtn>
+                    <span
+                      style={{
+                        minWidth: '34px',
+                        textAlign: 'center',
+                        fontFamily: 'var(--f-bold)',
+                        fontSize: '0.95rem',
+                      }}
+                    >
+                      {item.quantity}
+                    </span>
+                    <QtyBtn
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      label="Increase quantity"
+                    >+</QtyBtn>
+                  </div>
                   <button
-                    onClick={() => updateQuantity(item.cartId, item.quantity + 1)}
+                    type="button"
+                    onClick={() => removeItem(item.id)}
                     style={{
-                      width: '28px',
-                      height: '28px',
-                      borderRadius: '50%',
-                      border: '1px solid var(--saffron)',
-                      backgroundColor: 'transparent',
-                      color: 'var(--saffron)',
-                      cursor: 'pointer',
-                      fontSize: '1rem',
+                      fontFamily: 'var(--f-mono)',
+                      fontSize: '0.65rem',
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                      color: 'var(--cream-muted)',
+                      padding: '0.4rem 0.7rem',
+                      minHeight: '36px',
+                      transition: 'color 0.2s',
                     }}
-                  >
-                    +
-                  </button>
-                  <button
-                    onClick={() => removeItem(item.cartId)}
-                    style={{
-                      marginLeft: '0.5rem',
-                      backgroundColor: 'transparent',
-                      border: 'none',
-                      color: 'var(--rose)',
-                      cursor: 'pointer',
-                      fontSize: '0.9rem',
-                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--spice)' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--cream-muted)' }}
                   >
                     Remove
                   </button>
@@ -189,72 +333,144 @@ export default function Cart() {
           )}
         </div>
 
-        {/* Totals & Checkout */}
+        {/* Footer / totals */}
         {items.length > 0 && (
           <div
             style={{
-              padding: '1.5rem',
-              borderTop: '1px solid var(--border-color)',
-              backgroundColor: 'var(--bg-tertiary)',
-              borderBottomLeftRadius: '20px',
-              borderBottomRightRadius: '20px',
+              padding: '1.4rem 1.5rem',
+              borderTop: '1px solid rgba(255,245,230,0.08)',
+              background: 'var(--charcoal)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.6rem',
             }}
           >
-            <div style={{ display: 'grid', gap: '0.75rem', marginBottom: '1.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)' }}>
-                <span>Subtotal</span>
-                <span>{formatPrice(subtotal)}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)' }}>
-                <span>NJ Tax ({(RESTAURANT.taxRate * 100).toFixed(2)}%)</span>
-                <span>{formatPrice(tax)}</span>
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  fontSize: '1.25rem',
-                  fontWeight: '700',
-                  color: 'var(--saffron)',
-                  paddingTop: '0.75rem',
-                  borderTop: '1px solid var(--border-color)',
-                }}
-              >
-                <span>Total</span>
-                <span>{formatPrice(total)}</span>
-              </div>
-            </div>
+            <TotalRow label="Subtotal" value={formatPrice(subtotal)} />
+            <TotalRow label="NJ Sales Tax (6.625%)" value={formatPrice(tax)} muted />
+            <TotalRow label="Total" value={formatPrice(total)} emphasized />
 
-            <a
-              href={total > 0 ? '/checkout' : '#'}
-              onClick={(e) => {
-                if (total <= 0) e.preventDefault()
-              }}
+            <Link
+              href="/checkout"
+              onClick={closeCart}
+              className="btn btn-primary"
               style={{
-                display: 'block',
-                padding: '1rem',
-                backgroundColor: total > 0 ? 'var(--saffron)' : 'var(--text-secondary)',
-                color: total > 0 ? 'var(--charcoal)' : 'var(--bg-primary)',
-                textAlign: 'center',
-                textDecoration: 'none',
-                borderRadius: 'var(--radius-md)',
-                fontWeight: '700',
-                cursor: total > 0 ? 'pointer' : 'not-allowed',
-                transition: 'all 200ms',
+                width: '100%',
+                padding: '1.1rem',
+                fontSize: '1rem',
+                marginTop: '0.6rem',
               }}
             >
-              Proceed to Checkout
-            </a>
+              Proceed to Checkout →
+            </Link>
+            <p
+              style={{
+                fontFamily: 'var(--f-mono)',
+                fontSize: '0.65rem',
+                letterSpacing: '0.1em',
+                color: 'var(--cream-faint)',
+                textAlign: 'center',
+                margin: 0,
+                marginTop: '0.3rem',
+              }}
+            >
+              PICKUP AT {RESTAURANT.address.toUpperCase()}
+            </p>
           </div>
         )}
-      </div>
+      </aside>
+    </>
+  )
+}
 
-      <style>{`
-        @keyframes slideUp {
-          from { transform: translateY(100%); }
-          to { transform: translateY(0); }
-        }
-      `}</style>
+const lineMono: React.CSSProperties = {
+  fontFamily: 'var(--f-mono)',
+  fontSize: '0.7rem',
+  color: 'var(--cream-muted)',
+  letterSpacing: '0.04em',
+  lineHeight: 1.5,
+}
+
+function QtyBtn({
+  onClick,
+  label,
+  children,
+}: {
+  onClick: () => void
+  label: string
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      style={{
+        width: '32px',
+        height: '32px',
+        borderRadius: '50%',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'var(--cream)',
+        fontFamily: 'var(--f-bold)',
+        fontSize: '1.1rem',
+        transition: 'background 0.2s, color 0.2s',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = 'var(--saffron)'
+        e.currentTarget.style.color = 'var(--charcoal)'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = 'transparent'
+        e.currentTarget.style.color = 'var(--cream)'
+      }}
+    >
+      {children}
+    </button>
+  )
+}
+
+function TotalRow({
+  label,
+  value,
+  muted,
+  emphasized,
+}: {
+  label: string
+  value: string
+  muted?: boolean
+  emphasized?: boolean
+}) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'baseline',
+        paddingTop: emphasized ? '0.6rem' : 0,
+        borderTop: emphasized ? '1px solid rgba(255,245,230,0.1)' : 'none',
+      }}
+    >
+      <span
+        style={{
+          fontFamily: emphasized ? 'var(--f-bold)' : 'var(--f-mono)',
+          fontSize: emphasized ? '1rem' : '0.7rem',
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          color: muted ? 'var(--cream-faint)' : 'var(--cream)',
+        }}
+      >
+        {label}
+      </span>
+      <span
+        style={{
+          fontFamily: 'var(--f-bold)',
+          fontSize: emphasized ? '1.5rem' : '0.95rem',
+          color: emphasized ? 'var(--saffron)' : muted ? 'var(--cream-muted)' : 'var(--cream)',
+        }}
+      >
+        {value}
+      </span>
     </div>
   )
 }

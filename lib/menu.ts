@@ -98,300 +98,390 @@ export const categories: CategoryMeta[] = [
     key: 'biryani',
     number: '05',
     title: 'Biryani',
-    emoji: '👑',
+    emoji: '🍚',
     appetiteCopy:
-      'The king of Indian rice. Fragrant basmati, tender proteins, layer of spice. One scoop and you understand why empires were built on biryani.',
-    bandColor: '#9B59B6',
+      "Slow-cooked dum biryani. The rice absorbs everything — every spice, every drop of flavor. This isn't a side. It's the main event.",
+    bandColor: '#B8861B',
   },
   {
     key: 'snacks',
     number: '06',
-    title: 'Snacks & Sides',
-    emoji: '🤤',
-    appetiteCopy:
-      "Cravings between meals? Samosas, pakoras, fries with masala salt. The stuff that makes you come back.",
-    bandColor: '#E67E22',
+    title: 'Snacks',
+    emoji: '🥟',
+    appetiteCopy: 'Quick bites with big personality.',
+    bandColor: '#6A4A22',
   },
   {
     key: 'drinks',
     number: '07',
     title: 'Drinks',
     emoji: '🥤',
-    appetiteCopy:
-      'Refreshing drinks to cool down the spice. Mango lassi, masala chai, cold coffee, and more.',
-    bandColor: '#3498DB',
+    appetiteCopy: 'Wash it down right.',
+    bandColor: '#5A7A6E',
   },
 ]
 
 /* -------------------------------------------------------------------------- */
-/*  Menu Items                                                                 */
+/*  Bowl Builder                                                              */
+/* -------------------------------------------------------------------------- */
+
+export const bowlBase: BowlOption = {
+  id: 'base-basmati',
+  name: 'Basmati Rice',
+  description: 'Aged long-grain, perfectly steamed',
+  upcharge: 0,
+  included: true,
+}
+
+export const bowlProteins: BowlOption[] = [
+  {
+    id: 'protein-egg',
+    name: 'Egg',
+    description: 'Soft-cooked spiced egg, broken into your bowl',
+    upcharge: 0,
+    included: true,
+  },
+  {
+    id: 'protein-paneer',
+    name: 'Paneer',
+    description: 'House-pressed cottage cheese, pillowy and fresh',
+    upcharge: 0,
+    included: true,
+  },
+  {
+    id: 'protein-chicken',
+    name: 'Chicken',
+    description: 'Tender halal chicken, marinated & cooked to order',
+    upcharge: 2.99,
+  },
+]
+
+export const bowlSauces: BowlOption[] = [
+  {
+    id: 'sauce-makhani',
+    name: 'Makhani Sauce',
+    description: 'Velvety tomato cream — the one everyone loves',
+    upcharge: 0,
+  },
+  {
+    id: 'sauce-blossom',
+    name: 'Spicy Blossom',
+    description: 'Bold aromatic spice blend with a slow heat',
+    upcharge: 0,
+  },
+  {
+    id: 'sauce-fire',
+    name: 'Fire Roasted Chili',
+    description: 'Smoky, charred, unapologetically hot',
+    upcharge: 0,
+  },
+  {
+    id: 'sauce-mango',
+    name: 'Creamy Mango Glaze',
+    description: 'Sweet mango meets gentle spice — addictive',
+    upcharge: 0,
+  },
+]
+
+export const bowlToppings: BowlOption[] = [
+  {
+    id: 'topping-chickpea',
+    name: 'Zesty Chickpea',
+    description: 'Spiced chana with chaat masala kick',
+    upcharge: 0,
+    included: true,
+  },
+  {
+    id: 'topping-garden',
+    name: 'Garden Crunch Mix',
+    description: 'Cool fresh vegetables for texture',
+    upcharge: 0,
+    included: true,
+  },
+  {
+    id: 'topping-salsa',
+    name: 'Classic Fresh Salsa',
+    description: 'Tomato, onion, cilantro — bright & clean',
+    upcharge: 0,
+    included: true,
+  },
+  {
+    id: 'topping-butter',
+    name: 'Herb Butter Drizzle',
+    description: 'Rich, savory, makes everything better',
+    upcharge: 0,
+    included: true,
+  },
+  {
+    id: 'topping-papad',
+    name: 'Fried Papad Strips',
+    description: 'Crispy lentil chips — the crunch factor',
+    upcharge: 0,
+    included: true,
+  },
+]
+
+/** Returns price for a chosen protein bowl. */
+export function bowlBasePrice(proteinId: string): number {
+  if (proteinId === 'protein-chicken') return 14.98
+  return 11.99
+}
+
+export const EXTRA_SAUCE_PRICE = 1.5
+
+/* -------------------------------------------------------------------------- */
+/*  Static menu items                                                          */
 /* -------------------------------------------------------------------------- */
 
 export const menuItems: MenuItem[] = [
-  // BOWLS (Build Your Bowl)
+  // ===== Tiffin =====
   {
-    id: 'bowl-chicken-tikka',
-    category: 'bowl',
-    name: 'Chicken Tikka Bowl',
-    description: 'Tandoori chicken, basmati, cucumber raita',
-    price: 10.99,
-    emoji: '🍗',
-    badges: ['popular'],
-  },
-  {
-    id: 'bowl-paneer-tikka',
-    category: 'bowl',
-    name: 'Paneer Tikka Bowl',
-    description: 'Cottage cheese, basmati, mint yogurt',
-    price: 9.99,
-    emoji: '🧀',
-    badges: ['veg'],
-  },
-  {
-    id: 'bowl-lamb-seekh',
-    category: 'bowl',
-    name: 'Lamb Seekh Bowl',
-    description: 'Minced lamb kebab, basmati, tomato salsa',
-    price: 12.99,
-    emoji: '🐑',
-  },
-  {
-    id: 'bowl-shrimp-masala',
-    category: 'bowl',
-    name: 'Shrimp Masala Bowl',
-    description: 'Spiced shrimp, basmati, lemon rice',
-    price: 13.99,
-    emoji: '🦐',
-  },
-  {
-    id: 'bowl-veg-deluxe',
-    category: 'bowl',
-    name: 'Veg Deluxe Bowl',
-    description: 'Mixed vegetables, paneer, basmati',
-    price: 8.99,
-    emoji: '🥕',
-    badges: ['veg', 'popular'],
-  },
-
-  // TIFFIN
-  {
-    id: 'tiffin-daily',
+    id: 'tiffin-veg',
     category: 'tiffin',
-    name: "Today's Chef Selection",
-    description: "Chef's fresh curry of the day with rice. Ask your server what's cooking!",
-    price: 11.99,
-    emoji: '👨‍🍳',
-    badges: ['chef', 'popular'],
-  },
-
-  // STREET
-  {
-    id: 'street-pav-bhaji',
-    category: 'street',
-    name: 'Pav Bhaji',
-    description: 'Spiced vegetable mash with buttered bread',
-    price: 7.99,
-    emoji: '🥖',
-    badges: ['veg', 'new'],
-  },
-  {
-    id: 'street-samosa-wrap',
-    category: 'street',
-    name: 'Crispy Samosa Wrap',
-    description: 'Fried samosa deconstructed in a wrap with tamarind chutney',
-    price: 8.99,
-    emoji: '🌯',
-    badges: ['veg', 'new'],
-  },
-  {
-    id: 'street-kathi-roll',
-    category: 'street',
-    name: 'Kathi Chicken Roll',
-    description: 'Tandoori chicken wrapped in paratha with onions and chutney',
-    price: 9.99,
-    emoji: '🌯',
-    badges: ['popular'],
-  },
-
-  // GRILL & TANDOORI
-  {
-    id: 'grill-tandoori-chicken',
-    category: 'grill',
-    name: 'Tandoori Chicken Half',
-    description: 'Marinated in yogurt and spices, char-grilled perfection',
+    name: 'Veg Tiffin',
+    description:
+      "A full home-style Indian meal. Like someone's mom cooked for you. 2 Veg Curries (chef's daily choice) · 1 Dal · 4 Roti · Basmati Rice · Fresh Salad.",
     price: 13.99,
-    emoji: '🍗',
-    badges: ['popular'],
+    badges: ['veg', 'chef'],
+    servedWith: '2 Veg Curries · Dal · 4 Roti · Rice · Salad',
   },
   {
-    id: 'grill-seekh-kebab',
-    category: 'grill',
-    name: 'Lamb Seekh Kebab (2pc)',
-    description: 'Minced lamb with herbs and spices',
-    price: 11.99,
-    emoji: '🐑',
+    id: 'tiffin-nonveg',
+    category: 'tiffin',
+    name: 'Non-Veg Tiffin',
+    description:
+      "Rich curries, hot bread, fluffy rice. The complete comfort package. 2 Non-Veg Curries (chef's daily choice) · 1 Dal · 4 Roti · Basmati Rice · Fresh Salad.",
+    price: 17.99,
+    badges: ['nonveg', 'chef'],
+    servedWith: '2 Non-Veg Curries · Dal · 4 Roti · Rice · Salad',
   },
+
+  // ===== Street Fusion — Tacos =====
   {
-    id: 'grill-paneer-tikka',
-    category: 'grill',
-    name: 'Paneer Tikka (6pc)',
-    description: 'Soft cottage cheese in yogurt marinade',
+    id: 'taco-chicken',
+    category: 'street',
+    name: 'Chicken Tikka Taco',
+    description:
+      'Smoky tikka, cool mint chutney, sharp onions, fresh cilantro. Get two.',
     price: 10.99,
-    emoji: '🧀',
+    badges: ['new'],
+  },
+  {
+    id: 'taco-paneer',
+    category: 'street',
+    name: 'Paneer Taco',
+    description:
+      'Grilled paneer with sweet-sour tamarind and crisp fresh salad.',
+    price: 9.99,
+    badges: ['veg', 'new'],
+  },
+  {
+    id: 'taco-egg',
+    category: 'street',
+    name: 'Egg Bhurji Taco',
+    description:
+      'Fluffy spiced scrambled egg with fiery green chutney. Breakfast? Lunch? Yes.',
+    price: 9.99,
+    badges: ['new'],
+  },
+  {
+    id: 'taco-chana',
+    category: 'street',
+    name: 'Chana Taco',
+    description:
+      'Spiced chickpea, cooling raita, tangy pickle slaw. Accidentally vegan, intentionally delicious.',
+    price: 8.99,
     badges: ['veg'],
   },
 
-  // BIRYANI
+  // ===== Street Fusion — Quesadillas =====
+  {
+    id: 'quesadilla-chicken',
+    category: 'street',
+    name: 'Chicken Tikka Quesadilla',
+    description:
+      'Tandoori tikka and melted cheese with peppers and mint chutney. Crispy outside, molten inside.',
+    price: 10.99,
+    badges: ['new'],
+  },
+  {
+    id: 'quesadilla-paneer',
+    category: 'street',
+    name: 'Paneer Quesadilla',
+    description:
+      'Grilled paneer, gooey cheese, caramelized onion, fresh coriander.',
+    price: 9.99,
+    badges: ['veg'],
+  },
+  {
+    id: 'quesadilla-egg',
+    category: 'street',
+    name: 'Egg Quesadilla',
+    description:
+      'Spiced egg bhurji, colorful peppers, our house spice blend. Better than it sounds.',
+    price: 9.99,
+  },
+  {
+    id: 'quesadilla-cheese',
+    category: 'street',
+    name: 'Cheese Quesadilla',
+    description:
+      'Three-cheese blend, jalapeños, green chutney. Pure, unapologetic comfort.',
+    price: 8.99,
+    badges: ['veg'],
+  },
+
+  // ===== Grill & Tandoori =====
+  {
+    id: 'tandoor-tikka',
+    category: 'grill',
+    name: 'Chicken Tikka',
+    description:
+      'Boneless chicken marinated overnight in yogurt and spices. Chargrilled with char marks.',
+    price: 13.99,
+    badges: ['popular'],
+  },
+  {
+    id: 'tandoor-half',
+    category: 'grill',
+    name: 'Tandoori Chicken (Half)',
+    description:
+      'Half bird, marinated deep, roasted in the tandoor until the skin blisters perfectly.',
+    price: 11.99,
+  },
+  {
+    id: 'tandoor-full',
+    category: 'grill',
+    name: 'Tandoori Chicken (Full)',
+    description:
+      'The whole chicken. Marinated 24 hours. Enough said.',
+    price: 18.99,
+  },
+  {
+    id: 'tandoor-sheekh',
+    category: 'grill',
+    name: 'Sheekh Kebab',
+    description:
+      'Spiced minced chicken hand-pressed onto skewers. Char-edged, juicy center.',
+    price: 14.99,
+  },
+
+  // ===== Biryani =====
   {
     id: 'biryani-chicken',
     category: 'biryani',
     name: 'Chicken Biryani',
-    description: 'Fragrant basmati, tender chicken, aromatic spices',
-    price: 12.99,
-    emoji: '👑',
-    badges: ['popular'],
+    description:
+      'Aromatic basmati layered with slow-cooked chicken, whole spices, sealed and dum-cooked.',
+    price: 15.99,
+    badges: ['staff'],
+    servedWith: 'Served with Raita & Salan',
   },
   {
     id: 'biryani-veg',
     category: 'biryani',
-    name: 'Vegetable Biryani',
-    description: 'Mixed vegetables with saffron rice',
-    price: 10.99,
-    emoji: '👑',
+    name: 'Veg Biryani',
+    description:
+      'Seasonal vegetables, saffron-kissed basmati, dum style. Light but deeply satisfying.',
+    price: 12.99,
     badges: ['veg'],
-  },
-  {
-    id: 'biryani-goat',
-    category: 'biryani',
-    name: 'Goat Biryani',
-    description: 'Tender goat meat with basmati and caramelized onions',
-    price: 15.99,
-    emoji: '👑',
-  },
-  {
-    id: 'biryani-shrimp',
-    category: 'biryani',
-    name: 'Shrimp Biryani',
-    description: 'Spiced shrimp with fragrant rice',
-    price: 14.99,
-    emoji: '👑',
+    servedWith: 'Served with Raita & Salan',
   },
 
-  // SNACKS
+  // ===== Snacks =====
   {
-    id: 'snack-samosa',
+    id: 'snack-dabeli',
     category: 'snacks',
-    name: 'Samosa (3pc)',
-    description: 'Crispy fried pastry with spiced potato filling',
-    price: 4.99,
-    emoji: '🤤',
+    name: 'Dabeli (2 pc)',
+    description:
+      'Spiced mashed potato, pomegranate seeds, roasted peanuts, stuffed in toasted pav. A Mumbai classic. Sweet, spicy, crunchy, all at once.',
+    price: 9.99,
     badges: ['veg'],
   },
   {
-    id: 'snack-pakora',
+    id: 'snack-samosapav',
     category: 'snacks',
-    name: 'Vegetable Pakora (6pc)',
-    description: 'Battered and fried vegetables',
-    price: 6.99,
-    emoji: '🤤',
+    name: 'Samosa Pav (2 pc)',
+    description:
+      'Crispy golden samosa pressed into soft buttered toasted pav. Street food perfection.',
+    price: 9.99,
     badges: ['veg'],
   },
+
+  // ===== Drinks =====
   {
-    id: 'snack-fries-masala',
-    category: 'snacks',
-    name: 'Fries with Masala Salt',
-    description: 'Crispy fries dusted with spiced salt',
+    id: 'drink-roselassi',
+    category: 'drinks',
+    name: 'Rose Lassi',
+    description: 'Chilled yogurt blended with rose syrup. Floral, sweet, cooling.',
     price: 3.99,
-    emoji: '🍟',
-    badges: ['veg'],
-  },
-
-  // DRINKS
-  {
-    id: 'drink-mango-lassi',
-    category: 'drinks',
-    name: 'Mango Lassi',
-    description: 'Sweet yogurt drink with mango pulp',
-    price: 4.99,
-    emoji: '🥤',
-    badges: ['veg'],
+    emoji: '🌹',
   },
   {
-    id: 'drink-masala-chai',
+    id: 'drink-cane',
     category: 'drinks',
-    name: 'Masala Chai',
-    description: 'Spiced Indian tea with milk',
-    price: 2.99,
-    emoji: '☕',
-    badges: ['veg'],
-  },
-  {
-    id: 'drink-cold-coffee',
-    category: 'drinks',
-    name: 'Cold Coffee',
-    description: 'Iced coffee with milk and a touch of cardamom',
+    name: 'Sugar Cane Juice',
+    description: 'Freshly pressed cane juice. Naturally sweet, nothing added.',
     price: 3.99,
-    emoji: '🥤',
-    badges: ['veg'],
+    emoji: '🌾',
+  },
+  {
+    id: 'drink-soda',
+    category: 'drinks',
+    name: 'Can Soda',
+    description: 'Assorted canned sodas. Cold and simple.',
+    price: 1.99,
+    emoji: '🥫',
+  },
+  {
+    id: 'drink-thumsup',
+    category: 'drinks',
+    name: 'Thums Up',
+    description: "India's bold, strong cola. Not your average Coke.",
+    price: 2.49,
+    emoji: '⚡',
+  },
+  {
+    id: 'drink-limca',
+    category: 'drinks',
+    name: 'Limca',
+    description: 'Fizzy lemon-lime soda from India. Refreshing and tangy.',
+    price: 2.49,
+    emoji: '🍋',
   },
 ]
 
 /* -------------------------------------------------------------------------- */
-/*  Bowl Customization Options                                                */
-/* -------------------------------------------------------------------------- */
-
-export const bowlProteins: BowlOption[] = [
-  { id: 'protein-chicken', name: 'Chicken Tikka', description: 'Tender tandoori chicken', upcharge: 0, included: true },
-  { id: 'protein-paneer', name: 'Paneer', description: 'Soft cottage cheese', upcharge: 0, included: true },
-  { id: 'protein-lamb', name: 'Lamb Seekh', description: 'Minced lamb kebab', upcharge: 2.0 },
-  { id: 'protein-shrimp', name: 'Shrimp', description: 'Masala shrimp', upcharge: 2.5 },
-  { id: 'protein-tofu', name: 'Tofu', description: 'Marinated crispy tofu', upcharge: 1.0 },
-]
-
-export const bowlSauces: BowlOption[] = [
-  { id: 'sauce-tikka', name: 'Tikka Masala', description: 'Creamy tomato sauce', upcharge: 0 },
-  { id: 'sauce-curry', name: 'Curry', description: 'Spiced coconut curry', upcharge: 0 },
-  { id: 'sauce-tandoori', name: 'Tandoori', description: 'Smoky tandoori sauce', upcharge: 0 },
-  { id: 'sauce-mint', name: 'Mint Yogurt', description: 'Cooling mint yogurt', upcharge: 0 },
-  { id: 'sauce-chutney', name: 'Tamarind Chutney', description: 'Sweet and tangy', upcharge: 0 },
-]
-
-export const bowlToppings: BowlOption[] = [
-  { id: 'top-cucumber', name: 'Cucumber Salad', description: 'Fresh cucumber', upcharge: 0 },
-  { id: 'top-onion', name: 'Red Onions', description: 'Sliced red onions', upcharge: 0 },
-  { id: 'top-cilantro', name: 'Cilantro', description: 'Fresh cilantro', upcharge: 0 },
-  { id: 'top-lime', name: 'Lime', description: 'Squeeze of lime', upcharge: 0 },
-  { id: 'top-nuts', name: 'Cashew Nuts', description: 'Roasted cashews', upcharge: 1.0 },
-  { id: 'top-egg', name: 'Boiled Egg', description: 'Halved boiled egg', upcharge: 0.99 },
-]
-
-/* -------------------------------------------------------------------------- */
-/*  Restaurant Metadata                                                        */
+/*  Restaurant constants                                                       */
 /* -------------------------------------------------------------------------- */
 
 export const RESTAURANT = {
   name: 'Bombay Box',
-  location: '194 Rt 17 N, Rochelle Park, NJ 07602',
-  inside: 'Inside Subzi Bazar',
+  tagline: 'Fresh Ingredients. Made Every Day.',
+  secondaryTagline: 'Fast Indian Takeout That Hits Different.',
+  address: '194 Rt 17 N, Rochelle Park, NJ 07602',
+  addressDetail: 'Inside Subzi Bazar',
   phone: '201-546-1558',
-  taxRate: 0.06625, // NJ standard rate (6.625%)
-  currency: 'USD',
-}
+  phoneHref: 'tel:+12015461558',
+  website: 'eatbombaybox.com',
+  websiteUrl: 'https://eatbombaybox.com',
+  type: 'Takeout Only · No Dine-In',
+  allergyNote:
+    'Shared kitchen · May contain Gluten · Dairy · Nuts',
+  dietary: 'Halal available · Jain on request',
+  taxRate: 0.06625, // NJ sales tax
+} as const
 
 /* -------------------------------------------------------------------------- */
-/*  Utilities                                                                  */
+/*  Helpers                                                                   */
 /* -------------------------------------------------------------------------- */
 
-export function formatPrice(price: number): string {
-  return `$${price.toFixed(2)}`
+export function formatPrice(n: number): string {
+  return `$${n.toFixed(2)}`
 }
 
-export function getMenuItemById(id: string): MenuItem | undefined {
-  return menuItems.find((item) => item.id === id)
-}
-
-export function getItemsByCategory(category: Category): MenuItem[] {
-  return menuItems.filter((item) => item.category === category)
+export function itemsByCategory(cat: Category): MenuItem[] {
+  return menuItems.filter((i) => i.category === cat)
 }
 
 export function getBadgeLabel(b: BadgeKey): { label: string; cls: string } {

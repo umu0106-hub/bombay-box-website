@@ -29,127 +29,162 @@ export default function Header() {
         position: 'sticky',
         top: 0,
         zIndex: 100,
-        backdropFilter: 'blur(12px)',
-        backgroundColor: scrolled ? 'rgba(28, 20, 16, 0.95)' : 'transparent',
-        borderBottom: scrolled ? '1px solid rgba(255, 107, 26, 0.2)' : 'none',
-        transition: 'all 300ms var(--ease-smooth)',
-        padding: scrolled ? '0.75rem 1rem' : '1rem',
+        background: scrolled
+          ? 'rgba(28, 20, 16, 0.92)'
+          : 'rgba(28, 20, 16, 0.4)',
+        backdropFilter: 'blur(14px)',
+        WebkitBackdropFilter: 'blur(14px)',
+        borderBottom: scrolled
+          ? '1px solid rgba(255,245,230,0.08)'
+          : '1px solid transparent',
+        transition: 'background 0.3s var(--ease-warm), border-color 0.3s var(--ease-warm)',
       }}
     >
-      <nav
+      <div
+        className="container"
         style={{
           display: 'flex',
-          justifyContent: 'space-between',
           alignItems: 'center',
-          maxWidth: '1200px',
+          justifyContent: 'space-between',
+          padding: scrolled ? '0.7rem 1.25rem' : '1.1rem 1.25rem',
+          transition: 'padding 0.3s var(--ease-warm)',
+          maxWidth: '1280px',
           margin: '0 auto',
-          gap: '1rem',
         }}
       >
         {/* Logo */}
-        <Link href="/" style={{ textDecoration: 'none' }}>
-          <BombayBoxLogo compact={scrolled} />
+        <Link
+          href="/"
+          aria-label="Bombay Box — home"
+          style={{ display: 'inline-flex', alignItems: 'center' }}
+        >
+          <span className="header-logo-full">
+            <BombayBoxLogo variant="full" size={56} />
+          </span>
+          <span className="header-logo-compact">
+            <BombayBoxLogo variant="compact" size={44} />
+          </span>
         </Link>
 
-        {/* Nav Links */}
-        <div
+        {/* Nav links — desktop only */}
+        <nav
+          className="header-nav"
+          aria-label="Primary"
           style={{
-            display: 'flex',
-            gap: '2rem',
+            display: 'none',
+            gap: '2.2rem',
             alignItems: 'center',
-            justifyContent: 'center',
-            flex: 1,
           }}
         >
-          <Link
-            href="/menu"
-            style={{
-              color: 'var(--cream)',
-              textDecoration: 'none',
-              fontSize: '0.95rem',
-              fontWeight: '500',
-              transition: 'color 200ms',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--saffron)')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--cream)')}
-          >
-            Menu
-          </Link>
+          <Link href="/" className="header-link">Home</Link>
+          <Link href="/menu" className="header-link">Menu</Link>
+          <a href={`tel:+12015461558`} className="header-link">Call</a>
           <a
-            href="tel:201-546-1558"
-            style={{
-              color: 'var(--amber)',
-              textDecoration: 'none',
-              fontSize: '0.95rem',
-              fontWeight: '600',
-              transition: 'color 200ms',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--saffron)')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--amber)')}
+            href="https://maps.google.com/?q=194+Rt+17+N+Rochelle+Park+NJ"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="header-link"
           >
-            📞 201-546-1558
+            Directions
           </a>
-        </div>
+        </nav>
 
-        {/* Cart Button */}
+        {/* Cart trigger */}
         <button
+          type="button"
           onClick={openCart}
+          aria-label={`Cart, ${itemCount} item${itemCount === 1 ? '' : 's'}`}
           style={{
             position: 'relative',
             display: 'inline-flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            width: '44px',
-            height: '44px',
-            borderRadius: '50%',
-            border: '2px solid var(--saffron)',
-            backgroundColor: 'transparent',
-            color: 'var(--saffron)',
-            fontSize: '1.25rem',
-            cursor: 'pointer',
-            transition: 'all 200ms var(--ease-smooth)',
-            animation: shake > 0 ? `headerCartShake 400ms ease-out` : 'none',
+            gap: '0.55rem',
+            padding: '0.6rem 1rem',
+            borderRadius: '999px',
+            border: '1.5px solid rgba(255,245,230,0.18)',
+            background: 'rgba(28,20,16,0.6)',
+            color: 'var(--cream)',
+            fontFamily: 'var(--f-bold)',
+            fontSize: '0.82rem',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            minHeight: '44px',
+            transition: 'all 0.3s var(--ease-warm)',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--saffron)'
-            e.currentTarget.style.color = 'var(--charcoal)'
+            e.currentTarget.style.background = 'rgba(255, 107, 26, 0.18)'
+            e.currentTarget.style.borderColor = '#FF6B1A'
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent'
-            e.currentTarget.style.color = 'var(--saffron)'
+            e.currentTarget.style.background = 'rgba(28,20,16,0.6)'
+            e.currentTarget.style.borderColor = 'rgba(255,245,230,0.18)'
           }}
         >
-          🛒
+          {/* Cart icon — animates on bump */}
+          <span
+            key={shake}
+            style={{
+              display: 'inline-block',
+              animation: shake > 0 ? 'cartShake 0.6s ease' : 'none',
+              transformOrigin: 'center',
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M4 4h2l2.5 12h11l2.5-9H6.5" />
+              <circle cx="9" cy="20" r="1.5" />
+              <circle cx="18" cy="20" r="1.5" />
+            </svg>
+          </span>
+          <span className="cart-label">Cart</span>
           {itemCount > 0 && (
             <span
               style={{
                 position: 'absolute',
                 top: '-6px',
                 right: '-6px',
-                display: 'flex',
+                minWidth: '22px',
+                height: '22px',
+                padding: '0 6px',
+                borderRadius: '999px',
+                background: 'var(--saffron)',
+                color: 'var(--charcoal)',
+                fontFamily: 'var(--f-bold)',
+                fontSize: '0.72rem',
+                display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                minWidth: '24px',
-                height: '24px',
-                borderRadius: '50%',
-                backgroundColor: 'var(--rose)',
-                color: 'var(--cream)',
-                fontSize: '0.7rem',
-                fontWeight: '700',
+                boxShadow: '0 4px 14px -4px rgba(255,107,26,0.6)',
               }}
             >
               {itemCount}
             </span>
           )}
         </button>
-      </nav>
+      </div>
 
+      {/* Local style for header responsiveness */}
       <style>{`
-        @keyframes headerCartShake {
-          0%, 100% { transform: scale(1) rotate(0deg); }
-          25% { transform: scale(1.1) rotate(-5deg); }
-          75% { transform: scale(1.1) rotate(5deg); }
+        .header-logo-full { display: inline-flex; }
+        .header-logo-compact { display: none; }
+        .cart-label { display: inline; }
+        @media (max-width: 640px) {
+          .header-logo-full { display: none; }
+          .header-logo-compact { display: inline-flex; }
+          .cart-label { display: none; }
         }
+        @media (min-width: 880px) {
+          .header-nav { display: inline-flex !important; }
+        }
+        .header-link {
+          font-family: var(--f-mono);
+          font-size: 0.75rem;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          color: var(--cream-muted);
+          transition: color 0.2s;
+          padding: 0.5rem 0;
+        }
+        .header-link:hover { color: var(--saffron); }
       `}</style>
     </header>
   )
